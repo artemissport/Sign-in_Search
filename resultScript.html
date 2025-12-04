@@ -1,0 +1,187 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.min.css' rel='stylesheet' />
+<script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.min.js'></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+<script type="text/javascript">
+  google.charts.load('current', {'packages':['bar']});
+    window.addEventListener('load', function() {
+      $("#drawContent").hide();
+      $("#signLog").hide();
+      google.script.run.withSuccessHandler(function(idKey) {
+       document.getElementById('idkey').innerHTML = idKey;
+      }).getIdKeyName({sheetId:document.getElementById('sheetId').innerHTML});
+    });
+
+    function divInit() {
+        $("#table_div").hide();
+        $("#chart_sec").hide();
+        $("#calendar_sec").hide();
+        $("#drawContent").hide();
+        $("#tips").hide();
+        $("#signLog").hide();
+        calCoachCount();
+      }
+
+      function getFiter(conditional) {
+         $(':button').attr('disabled', true);
+         return {
+            id: document.getElementById('idName').innerHTML,
+            sheetId:document.getElementById('sheetId').innerHTML,
+            filter:conditional
+          };
+      }
+
+      function calCoachCount(){
+        google.script.run.withSuccessHandler(function(num){
+          if(num > 0){
+          document.getElementById('tips').innerHTML = "這個月你再簽" +num+"次，就有教練課囉～"
+        }else{
+          document.getElementById('tips').innerHTML = "你已經可以申請教練課了，記得跟基地預約時間喔～"
+        }
+        }).calCoachCount(getFiter("conditional"));  
+      }
+
+      function getData(){
+        divInit();
+        google.script.run.withSuccessHandler(drawTable).getGsData(getFiter("ALL"));
+        $("#table_div").show();
+      }
+      
+      function drawTable(data) {  
+        var obj = JSON.parse(data);
+        
+          var table = '<table class="table">';
+          table += '<tr>';
+          for (var key in obj[0]) {
+          if (obj[0].hasOwnProperty(key)) {
+            table += '<th class="bg-primary">' + key + '</th>';
+          }
+        }
+        table += '</tr>';
+        if (obj && obj.length > 0) {
+        var dataTable = "";
+          for (var i = 0; i < obj.length; i++) {
+            dataTable += '<tr>';
+              for (var key in obj[i]) {
+                  if (obj[i].hasOwnProperty(key)) {
+                  dataTable += "<td "+ (key == "校長留言板" ? " style='color:blue'" : "") +">" + obj[i][key] + '</td>';
+                }
+              }
+              dataTable += '</tr>';
+          }
+          table += dataTable;
+          table += '</table>';
+          document.getElementById('table_div').innerHTML = table;
+        }
+        $(':button').attr('disabled', false);
+      }
+
+      function drawChart() {
+        divInit();
+        $("#tips").show();
+        $("#signLog").show();
+        google.script.run.withSuccessHandler(chartTable).getEvents(getFiter("conditional"));
+        google.script.run.withSuccessHandler(function(imgHtml){
+          document.getElementById('img_div').innerHTML = imgHtml;
+          $(':button').attr('disabled', false);
+        }
+        ).drawImg(getFiter("conditional"));  
+         google.script.run.withSuccessHandler(function(imgHtml){
+          document.getElementById('imgCoach_div').innerHTML = imgHtml;
+        }
+        ).drawCoachClass(getFiter("conditional"));  
+      }
+
+      function chartTable(json) {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', '學號');
+        data.addColumn('number', '次數');
+        var rows = json;
+        var total = 0;
+
+        for (var i = 0; i < rows.length; i++) {
+          for (var key in rows[i]) {
+            if (rows[i].hasOwnProperty(key) && String(rows[i][key]).includes(document.getElementById('idName').innerHTML)) {
+                total++;
+                data.addRow([String(rows[i][key]), 1]);
+                break;
+            }
+          }
+        }
+        if(rows.length == 0){
+          data.addRow([document.getElementById('idName').innerHTML, 0]);
+        }
+
+        var chartData = google.visualization.data.group(
+          data,
+          [0],
+          [{'column': 1, 'aggregation': google.visualization.data.sum,'type':'number'}]
+        );
+
+        chartData.addRow(['累計簽到數', total]);
+
+        var options = {
+          chart: {
+            title: '線上減重班',
+            subtitle: '這個月累積簽到數',
+          },
+          bars: 'horizontal',
+          bar: {groupWidth: "60%"},
+          width:window.innerWidth * 0.8,
+          height: 300,
+          fontSize:20
+        };
+        
+        var chart = new google.charts.Bar(document.getElementById('chart_div'));
+        chart.draw(chartData, google.charts.Bar.convertOptions(options));
+        
+        $("#chart_sec").show();
+      }
+
+      function drawCalendar(){
+        divInit();
+        $("#tips").show();
+        $('#calendar_div').fullCalendar('destroy');
+        $('#calendar_div').fullCalendar({
+          events: function(start, end, timezone, callback) {
+            google.script.run.withSuccessHandler(function(events) {
+              callback(events);
+              $(':button').attr('disabled', false);
+            }).getEvents(getFiter("conditional"));
+          }
+        });
+        $("#calendar_sec").show();
+        $("#signSheetUrl").show();
+      }
+
+      function drawSticyNote(){
+        divInit();
+        var input = document.getElementById('drawContent');
+        input.style.border ="1px solid black";
+        $("#drawContent").show();
+        google.script.run.withSuccessHandler(function(drawContentHtml) {
+          document.getElementById('drawContent').innerHTML = drawContentHtml;
+
+          var drawWidth = $("#drawContent").width();
+          var drawHeight = $("#drawContent").height();
+
+          // 遍歷每一個 sticky-note
+          $(".sticky-note").each(function() {
+            // 生成隨機的位置和角度
+            var randomTop = Math.random() * (drawHeight - $(this).height());
+            var randomLeft = Math.random() * (drawWidth - $(this).width());
+            var randomAngle = Math.random() * 20;
+
+            // 設定 sticky-note 的位置和角度
+            $(this).css("top", randomTop + "px");
+            $(this).css("left", randomLeft + "px");
+            $(this).css("transform", "rotate(" + randomAngle + "deg)");
+          })
+        }).getSticyNotes(getFiter("ALL"));
+      }
+</script>
