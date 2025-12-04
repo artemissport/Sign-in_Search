@@ -1,5 +1,5 @@
 // ==========================================
-// 【重要】請填入您最新部署的 GAS Web App URL
+// 請填入您最新的 GAS Web App 網址
 // ==========================================
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxE5Wrqr_uPvuHZ6HhE6s3fWfh9j7QX5et4ANiI5SXXcH0_HS9ZL8OUon2B-Jrmd3eA/exec";
 
@@ -7,12 +7,9 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbxE5Wrqr_uPvuHZ6HhE6s3f
 let userData = null;
 let userId = "";
 
-// 載入 Google Charts
 google.charts.load('current', { 'packages': ['bar'] });
 
-// 頁面載入時執行
 window.addEventListener('load', function() {
-  // 1. 檢查登入狀態 (從 SessionStorage 讀取)
   const storedData = sessionStorage.getItem('userData');
   userId = sessionStorage.getItem('userId');
 
@@ -24,28 +21,23 @@ window.addEventListener('load', function() {
 
   userData = JSON.parse(storedData);
 
-  // 2. 填入頁面上的基本資料
   document.getElementById('disp_id').innerText = userData.idName || userId;
   document.getElementById('disp_dateRange').innerText = userData.dateRangeText || "";
   
-  // 設定補簽連結
   if (userData.signSheetUrl) {
     const link = document.getElementById('signSheetUrlLink');
     link.href = userData.signSheetUrl;
     link.style.display = 'inline-block';
   }
 
-  // 初始化畫面 (隱藏所有區塊)
   divInit();
 });
 
-// 登出功能
 function logout() {
   sessionStorage.clear();
   window.location.href = "index.html";
 }
 
-// 初始化介面函式
 function divInit() {
   $("#table_div").hide();
   $("#chart_sec").hide();
@@ -55,7 +47,6 @@ function divInit() {
   $("#loading").hide();
 }
 
-// 顯示/隱藏讀取動畫
 function showLoading() {
   $("#loading").show();
   $('input[type="button"]').prop('disabled', true);
@@ -66,7 +57,7 @@ function hideLoading() {
   $('input[type="button"]').prop('disabled', false);
 }
 
-// 產生 API 請求網址
+// 產生 API 網址
 function getParams(op, filter = "conditional") {
   const params = new URLSearchParams({
     op: op,
@@ -77,7 +68,7 @@ function getParams(op, filter = "conditional") {
   return GAS_URL + "?" + params.toString();
 }
 
-// ================= 功能 1: 全部心得查詢 =================
+// 1. 全部心得查詢 (維持原邏輯)
 function getData() {
   divInit();
   showLoading();
@@ -85,13 +76,12 @@ function getData() {
   fetch(getParams("getGsData", "ALL"))
     .then(res => res.json())
     .then(data => {
+      // 確保 data 是陣列，因為後端有時回傳字串
+      if (typeof data === 'string') data = JSON.parse(data);
       drawTable(data);
       $("#table_div").show();
     })
-    .catch(err => {
-      console.error(err);
-      alert("讀取失敗，請確認網路連線");
-    })
+    .catch(err => { console.error(err); alert("讀取失敗"); })
     .finally(() => hideLoading());
 }
 
@@ -100,16 +90,9 @@ function drawTable(obj) {
     document.getElementById('table_div').innerHTML = "<h3 class='text-center'>查無資料</h3>";
     return;
   }
-
-  let table = '<table class="table table-striped table-bordered">';
-  // 表頭
-  table += '<thead><tr>';
-  for (let key in obj[0]) {
-    table += '<th class="bg-primary">' + key + '</th>';
-  }
+  let table = '<table class="table table-striped table-bordered"><thead><tr>';
+  for (let key in obj[0]) { table += '<th class="bg-primary">' + key + '</th>'; }
   table += '</tr></thead><tbody>';
-
-  // 內容
   obj.forEach(row => {
     table += '<tr>';
     for (let key in row) {
@@ -122,13 +105,12 @@ function drawTable(obj) {
   document.getElementById('table_div').innerHTML = table;
 }
 
-// ================= 功能 2: 這個月的累積次數 (圖表 + 勳章) =================
+// 2. 統計圖表 (維持原邏輯)
 function drawChart() {
   divInit();
   showLoading();
   $("#chart_sec").show();
 
-  // 同時發送三個 API 請求 (提示、圖表、勳章)
   Promise.all([
     fetch(getParams("calCoachCount")).then(r => r.json()),
     fetch(getParams("getEvents")).then(r => r.json()),
@@ -139,10 +121,7 @@ function drawChart() {
     drawBarChart(eventsData);
     renderBadges(badgesData);
 
-  }).catch(err => {
-    console.error(err);
-    alert("讀取圖表失敗");
-  })
+  }).catch(err => { console.error(err); alert("讀取圖表失敗"); })
   .finally(() => hideLoading());
 }
 
@@ -151,43 +130,34 @@ function drawBarChart(rows) {
   let dataTable = new google.visualization.DataTable();
   dataTable.addColumn('string', '項目');
   dataTable.addColumn('number', '次數');
-
   dataTable.addRow([userData.idName || userId, 0]); 
   dataTable.addRow(['累計簽到數', total]);
 
   let options = {
-    chart: {
-      title: '線上減重班',
-      subtitle: '這個月累積簽到數',
-    },
+    chart: { title: '線上減重班', subtitle: '這個月累積簽到數' },
     bars: 'horizontal',
     bar: { groupWidth: "60%" },
     height: 300,
     legend: { position: 'none' }
   };
-
   let chart = new google.charts.Bar(document.getElementById('chart_div'));
   chart.draw(dataTable, google.charts.Bar.convertOptions(options));
 }
 
+// 3. 勳章渲染 (將後端計算結果畫出來)
 function renderBadges(badges) {
   let imgHtml = "";
   let coachHtml = "";
-
   badges.forEach(badge => {
     let imgTag = `<img src="${badge.src}" alt="${badge.alt}" title="${badge.alt}">`;
-    if (badge.type === 'coach') {
-      coachHtml += imgTag;
-    } else {
-      imgHtml += imgTag;
-    }
+    if (badge.type === 'coach') coachHtml += imgTag;
+    else imgHtml += imgTag;
   });
-
   document.getElementById('img_div').innerHTML = imgHtml;
   document.getElementById('imgCoach_div').innerHTML = coachHtml;
 }
 
-// ================= 功能 3: 簽到細項行事曆 =================
+// 4. 行事曆 (維持原邏輯)
 function drawCalendar() {
   divInit();
   showLoading();
@@ -196,11 +166,7 @@ function drawCalendar() {
 
   $('#calendar_div').fullCalendar('destroy');
   $('#calendar_div').fullCalendar({
-    header: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'month,listWeek'
-    },
+    header: { left: 'prev,next today', center: 'title', right: 'month,listWeek' },
     height: 'auto',
     events: function(start, end, timezone, callback) {
       fetch(getParams("getEvents"))
@@ -209,21 +175,15 @@ function drawCalendar() {
           callback(events);
           hideLoading();
           $("#tips").html("");
-        })
-        .catch(err => {
-          console.error(err);
-          alert("無法載入行事曆");
-          hideLoading();
         });
     }
   });
 }
 
-// ================= 功能 4: 給你愛的小紙條 =================
+// 5. 小紙條 (維持原邏輯)
 function drawSticyNote() {
   divInit();
   showLoading();
-  
   const container = document.getElementById('drawContent');
   container.style.border = "1px solid #ccc";
   container.style.display = "block";
@@ -232,53 +192,28 @@ function drawSticyNote() {
     .then(res => res.json())
     .then(notes => {
       let html = "";
-      
-      if(notes.length === 0) {
-        html = "<h3 class='text-center' style='padding-top:100px;'>目前沒有小紙條喔</h3>";
-      } else {
+      if(notes.length === 0) html = "<h3 class='text-center' style='padding-top:100px;'>目前沒有小紙條喔</h3>";
+      else {
         notes.forEach(note => {
           let content = note.content;
           if (content.length > 100) content = content.substring(0, 100) + "...";
-          
-          html += `<div class="sticky-note sticky-note-${note.color}">
-                    ${content}
-                    <br><br>
-                    <small style="float:right;">by ${note.name}</small>
-                  </div>`;
+          html += `<div class="sticky-note sticky-note-${note.color}">${content}<br><br><small style="float:right;">by ${note.name}</small></div>`;
         });
       }
-      
       container.innerHTML = html;
-      
-      // 隨機排列邏輯
       setTimeout(() => {
         const width = $(container).width();
         const height = $(container).height();
-        
         $(".sticky-note").each(function() {
-          const myW = $(this).outerWidth();
-          const myH = $(this).outerHeight();
-          
-          const maxLeft = width - myW;
-          const maxTop = height - myH;
-          
-          const randomLeft = Math.max(0, Math.random() * maxLeft);
-          const randomTop = Math.max(0, Math.random() * maxTop);
-          const randomAngle = (Math.random() * 20) - 10;
-
+          const maxLeft = width - $(this).outerWidth();
+          const maxTop = height - $(this).outerHeight();
           $(this).css({
-            "top": randomTop + "px",
-            "left": randomLeft + "px",
-            "transform": "rotate(" + randomAngle + "deg)"
+            "top": Math.max(0, Math.random() * maxTop) + "px",
+            "left": Math.max(0, Math.random() * maxLeft) + "px",
+            "transform": "rotate(" + ((Math.random() * 20) - 10) + "deg)"
           });
         });
         hideLoading();
       }, 100);
-
-    })
-    .catch(err => {
-      console.error(err);
-      alert("讀取小紙條失敗");
-      hideLoading();
     });
 }
