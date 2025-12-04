@@ -5,13 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Artemis 線上減重班</title>
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- FullCalendar -->
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
@@ -76,7 +72,6 @@
 </head>
 <body class="min-h-screen flex flex-col text-gray-800">
 
-  <!-- Header -->
   <header class="bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg sticky top-0 z-50">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-2">
@@ -86,16 +81,15 @@
           <span class="text-xs sm:text-sm font-normal text-pink-100 opacity-90 tracking-normal">線上減重班</span>
         </h1>
       </div>
-      <div id="userInfo" class="hidden text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+      <div id="userInfo" class="hidden text-sm font-medium bg-white/20 px-3 py-1 rounded-full flex items-center gap-2">
         <span id="headerUserName">學員</span>
+        <button onclick="logout()" class="text-xs bg-pink-700 hover:bg-pink-800 px-2 py-1 rounded transition">登出</button>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
   <main class="flex-grow container mx-auto px-4 py-6 relative">
     
-    <!-- Login Section -->
     <div id="loginSection" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden mt-10 transition-all duration-500">
       <div class="bg-pink-100 p-6 text-center">
         <div class="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center shadow-md mb-4">
@@ -125,10 +119,8 @@
       </div>
     </div>
 
-    <!-- Dashboard Section (Hidden by default) -->
     <div id="dashboardSection" class="hidden space-y-6">
       
-      <!-- Welcome Card -->
       <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-purple-500 relative overflow-hidden">
         <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4">
           <i class="fa-solid fa-crown text-9xl text-purple-600"></i>
@@ -143,7 +135,6 @@
         </div>
       </div>
 
-      <!-- Quick Stats -->
       <div class="grid grid-cols-2 gap-4">
         <div class="bg-white p-4 rounded-xl shadow-sm text-center">
           <p class="text-gray-500 text-xs uppercase font-bold">本月簽到</p>
@@ -158,7 +149,6 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
       <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
         <button onclick="switchTab('records')" class="tab-btn active flex-shrink-0 bg-white px-6 py-2 rounded-full shadow-sm text-sm font-medium border border-gray-200 text-gray-600 hover:text-pink-600 focus:outline-none transition-all">
           <i class="fa-solid fa-list-ul mr-1"></i> 心得記錄
@@ -174,53 +164,42 @@
         </button>
       </div>
 
-      <!-- Tab Contents -->
       <div id="contentArea" class="bg-white rounded-2xl shadow-lg min-h-[300px] p-4 relative">
         <div id="contentLoader" class="absolute inset-0 flex items-center justify-center bg-white z-10 hidden">
           <div class="loader"></div>
         </div>
         
-        <!-- 1. Records View (Card Style) -->
         <div id="view-records" class="tab-content">
           <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">心得與簽到詳細記錄</h3>
           
-          <!-- Records Container -->
           <div id="recordsContainer" class="space-y-4">
-             <!-- Cards injected here -->
-          </div>
+              </div>
 
           <div id="noRecords" class="hidden text-center py-10 text-gray-400">
-             <div class="mb-2">暫無資料</div>
-             <!-- Debug Info -->
-             <div id="debugInfo" class="text-xs bg-red-50 text-red-600 p-2 rounded border border-red-200 inline-block mx-auto max-w-md text-left hidden">
-               <p class="font-bold"><i class="fa-solid fa-bug"></i> 偵錯資訊 (請截圖給小天使):</p>
-               <p>系統搜尋學號：<span id="debugId"></span></p>
-               <p>系統搜尋區間：<span id="debugRange"></span></p>
-               <p class="mt-1">請檢查：<br>1. Google Sheet「網站基礎設定」的日期年份是否為 2025？<br>2. 您的學號是否輸入正確？(例如 2511107 vs 2511007)</p>
-             </div>
+              <div class="mb-2">暫無資料</div>
+              <div id="debugInfo" class="text-xs bg-red-50 text-red-600 p-2 rounded border border-red-200 inline-block mx-auto max-w-md text-left hidden">
+                <p class="font-bold"><i class="fa-solid fa-bug"></i> 偵錯資訊 (請截圖給小天使):</p>
+                <p>系統搜尋學號：<span id="debugId"></span></p>
+                <p>系統搜尋區間：<span id="debugRange"></span></p>
+              </div>
           </div>
         </div>
 
-        <!-- 2. Stats View -->
         <div id="view-stats" class="tab-content hidden">
           <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">我的成就與勳章</h3>
           <div id="badgeContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <!-- Badges will be injected here -->
-          </div>
+            </div>
           <div id="noBadges" class="hidden text-center py-10 text-gray-400">繼續努力，勳章即將到手！</div>
         </div>
 
-        <!-- 3. Calendar View -->
         <div id="view-calendar" class="tab-content hidden">
           <div id="calendar" class="text-sm"></div>
         </div>
 
-        <!-- 4. Notes View -->
         <div id="view-notes" class="tab-content hidden">
           <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">給你的愛的小紙條</h3>
           <div id="notesContainer" class="relative h-[400px] w-full overflow-hidden bg-yellow-50 rounded-xl border border-yellow-200">
-            <!-- Notes injected here -->
-          </div>
+            </div>
         </div>
 
       </div>
@@ -235,14 +214,43 @@
     </div>
   </footer>
 
-  <!-- JavaScript Logic -->
   <script>
+    // ============================================
+    // 【重要】請填入您部署到 GAS 取得的 Web App URL
+    // ============================================
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwyasaaysx1c5Dpznn_xn5DMFSSolLQd_KDmcrv22PAT7YrW8H8jcpumg3UjNQ72QDu/exec";
+
     let currentUser = null;
     let calendarInstance = null;
 
+    // 頁面載入時檢查是否已登入
+    window.addEventListener('load', function() {
+        const storedUser = sessionStorage.getItem('artemis_user');
+        if (storedUser) {
+            const parsed = JSON.parse(storedUser);
+            // 恢復上次登入狀態
+            document.getElementById('phoneNumber').value = parsed.user.phone;
+            handleLogin(null, parsed); 
+        }
+    });
+
+    // 登出功能
+    function logout() {
+        sessionStorage.removeItem('artemis_user');
+        window.location.reload();
+    }
+
     // Login Handler
-    function handleLogin(e) {
-      e.preventDefault();
+    function handleLogin(e, restoredData = null) {
+      if(e) e.preventDefault();
+      
+      // 如果有快取資料，直接使用，不用再打 API
+      if (restoredData) {
+         currentUser = restoredData.user;
+         initDashboard(restoredData);
+         return;
+      }
+
       const phone = document.getElementById('phoneNumber').value.trim();
       if (!phone) return;
 
@@ -254,31 +262,35 @@
       loader.classList.remove('hidden');
       btn.disabled = true;
 
-      google.script.run
-        .withSuccessHandler(response => {
-          btnText.classList.remove('hidden');
-          loader.classList.add('hidden');
-          btn.disabled = false;
+      // 改用 fetch 呼叫 GAS API
+      fetch(`${GAS_API_URL}?op=login&phone=${phone}`)
+        .then(res => res.json())
+        .then(response => {
+           btnText.classList.remove('hidden');
+           loader.classList.add('hidden');
+           btn.disabled = false;
 
-          if (response.success) {
-            currentUser = response.user;
-            initDashboard(response);
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: '登入失敗',
-              text: response.message,
-              confirmButtonColor: '#db2777'
-            });
-          }
+           if (response.success) {
+             currentUser = response.user;
+             // 儲存登入狀態
+             sessionStorage.setItem('artemis_user', JSON.stringify(response));
+             initDashboard(response);
+           } else {
+             Swal.fire({
+               icon: 'error',
+               title: '登入失敗',
+               text: response.message,
+               confirmButtonColor: '#db2777'
+             });
+           }
         })
-        .withFailureHandler(err => {
-          btnText.classList.remove('hidden');
-          loader.classList.add('hidden');
-          btn.disabled = false;
-          Swal.fire('系統錯誤', err.message, 'error');
-        })
-        .apiLogin(phone);
+        .catch(err => {
+           console.error(err);
+           btnText.classList.remove('hidden');
+           loader.classList.add('hidden');
+           btn.disabled = false;
+           Swal.fire('系統錯誤', '無法連接到伺服器，請檢查網路或 GAS 設定。', 'error');
+        });
     }
 
     function initDashboard(data) {
@@ -341,7 +353,7 @@
     function renderHabitSection(title, content, textColor, bgColor) {
       if(!content) return '';
       // Split by comma (,) ONLY as requested. Full-width comma (，) is preserved.
-      const items = content.split(/,/).filter(s => s.trim());
+      const items = String(content).split(/,/).filter(s => s.trim());
       if(items.length === 0) return '';
       
       let html = `<div class="${bgColor} p-3 rounded-lg border border-opacity-50 border-${textColor.replace('text-', '')}">
@@ -362,61 +374,66 @@
       if (container.children.length > 0) return; // Already loaded
 
       showContentLoader(true);
-      google.script.run.withSuccessHandler(res => {
-        showContentLoader(false);
-        if (res.success && res.data.length > 0) {
-          // Hide no records msg
-          document.getElementById('noRecords').classList.add('hidden');
-          
-          let cardsHtml = '';
-          res.data.forEach(record => {
-             // Card Structure
-             cardsHtml += `
-             <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-pink-100 transition hover:shadow-md">
-                <!-- Header: Date -->
-                <div class="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-4 py-2 font-bold text-sm flex justify-between items-center">
-                  <span><i class="fa-regular fa-calendar mr-2"></i>${record.date}</span>
-                  <i class="fa-solid fa-circle-check opacity-50"></i>
-                </div>
-                
-                <div class="p-4 space-y-3">
-                  <!-- Note -->
-                  <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 relative border border-gray-100">
-                     <div class="absolute -top-2 left-2 bg-white px-2 text-xs text-gray-400 border border-gray-100 rounded-full shadow-sm">心得</div>
-                     <p class="mt-1">${record.note || '<span class="text-gray-400 italic">未填寫心得</span>'}</p>
+      
+      // 使用 fetch API
+      fetch(`${GAS_API_URL}?op=getRecords&sheetId=${currentUser.sheetId}&id=${currentUser.id}`)
+        .then(r => r.json())
+        .then(res => {
+            showContentLoader(false);
+            if (res.success && res.data.length > 0) {
+              // Hide no records msg
+              document.getElementById('noRecords').classList.add('hidden');
+              
+              let cardsHtml = '';
+              res.data.forEach(record => {
+                  // Card Structure
+                  cardsHtml += `
+                  <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-pink-100 transition hover:shadow-md">
+                    <div class="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-4 py-2 font-bold text-sm flex justify-between items-center">
+                      <span><i class="fa-regular fa-calendar mr-2"></i>${record.date}</span>
+                      <i class="fa-solid fa-circle-check opacity-50"></i>
+                    </div>
+                    
+                    <div class="p-4 space-y-3">
+                      <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 relative border border-gray-100">
+                          <div class="absolute -top-2 left-2 bg-white px-2 text-xs text-gray-400 border border-gray-100 rounded-full shadow-sm">心得</div>
+                          <p class="mt-1">${record.note || '<span class="text-gray-400 italic">未填寫心得</span>'}</p>
+                      </div>
+
+                      ${ record.coachMsg ? `
+                      <div class="bg-yellow-50 p-3 rounded-lg text-sm text-gray-800 border border-yellow-200 relative mt-4">
+                          <div class="absolute -top-2 left-2 bg-yellow-100 px-2 text-xs text-yellow-700 font-bold rounded-full shadow-sm border border-yellow-200">校長留言</div>
+                          <p class="mt-1">${record.coachMsg}</p>
+                      </div>` : '' }
+
+                      <div class="grid grid-cols-1 gap-2 mt-2">
+                          ${renderHabitSection('Add', record.add, 'text-blue-600', 'bg-blue-50')}
+                          ${renderHabitSection('Build', record.build, 'text-green-600', 'bg-green-50')}
+                          ${renderHabitSection('Cancel', record.cancel, 'text-red-600', 'bg-red-50')}
+                      </div>
+                    </div>
                   </div>
+                  `;
+              });
+              container.innerHTML = cardsHtml;
 
-                  <!-- Coach Msg -->
-                  ${ record.coachMsg ? `
-                  <div class="bg-yellow-50 p-3 rounded-lg text-sm text-gray-800 border border-yellow-200 relative mt-4">
-                     <div class="absolute -top-2 left-2 bg-yellow-100 px-2 text-xs text-yellow-700 font-bold rounded-full shadow-sm border border-yellow-200">校長留言</div>
-                     <p class="mt-1">${record.coachMsg}</p>
-                  </div>` : '' }
-
-                  <!-- Habits Grid -->
-                  <div class="grid grid-cols-1 gap-2 mt-2">
-                     ${renderHabitSection('Add', record.add, 'text-blue-600', 'bg-blue-50')}
-                     ${renderHabitSection('Build', record.build, 'text-green-600', 'bg-green-50')}
-                     ${renderHabitSection('Cancel', record.cancel, 'text-red-600', 'bg-red-50')}
-                  </div>
-                </div>
-             </div>
-             `;
-          });
-          container.innerHTML = cardsHtml;
-
-        } else {
-          const noRecordsDiv = document.getElementById('noRecords');
-          noRecordsDiv.classList.remove('hidden');
-          
-          // Show Debug Info
-          if (res.debugInfo) {
-             document.getElementById('debugInfo').classList.remove('hidden');
-             document.getElementById('debugId').innerText = res.debugInfo.searchId;
-             document.getElementById('debugRange').innerText = `${res.debugInfo.searchStart} ~ ${res.debugInfo.searchEnd}`;
-          }
-        }
-      }).apiGetRecords(currentUser.sheetId, currentUser.id);
+            } else {
+              const noRecordsDiv = document.getElementById('noRecords');
+              noRecordsDiv.classList.remove('hidden');
+              
+              // Show Debug Info
+              if (res.debugInfo) {
+                  document.getElementById('debugInfo').classList.remove('hidden');
+                  document.getElementById('debugId').innerText = res.debugInfo.searchId;
+                  document.getElementById('debugRange').innerText = `${res.debugInfo.searchStart} ~ ${res.debugInfo.searchEnd}`;
+              }
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showContentLoader(false);
+            container.innerHTML = '<div class="text-center py-4 text-red-500">資料載入失敗</div>';
+        });
     }
 
     function loadStats() {
@@ -424,22 +441,25 @@
       if (container.children.length > 0) return;
 
       showContentLoader(true);
-      google.script.run.withSuccessHandler(res => {
-        showContentLoader(false);
-        if (res.success && res.badges.length > 0) {
-           res.badges.forEach(b => {
-             const card = `
-               <div class="flex flex-col items-center p-3 bg-pink-50 rounded-lg border border-pink-100">
-                 <img src="${b.img}" alt="${b.name}" class="w-20 h-20 object-contain mb-2 drop-shadow-md" referrerpolicy="no-referrer">
-                 <span class="text-xs font-bold text-gray-600 text-center">${b.name}</span>
-               </div>
-             `;
-             container.innerHTML += card;
-           });
-        } else {
-           document.getElementById('noBadges').classList.remove('hidden');
-        }
-      }).apiGetStats(currentUser.sheetId, currentUser.id);
+      
+      fetch(`${GAS_API_URL}?op=getStats&sheetId=${currentUser.sheetId}&id=${currentUser.id}`)
+        .then(r => r.json())
+        .then(res => {
+            showContentLoader(false);
+            if (res.success && res.badges.length > 0) {
+               res.badges.forEach(b => {
+                 const card = `
+                   <div class="flex flex-col items-center p-3 bg-pink-50 rounded-lg border border-pink-100">
+                     <img src="${b.img}" alt="${b.name}" class="w-20 h-20 object-contain mb-2 drop-shadow-md" referrerpolicy="no-referrer">
+                     <span class="text-xs font-bold text-gray-600 text-center">${b.name}</span>
+                   </div>
+                 `;
+                 container.innerHTML += card;
+               });
+            } else {
+               document.getElementById('noBadges').classList.remove('hidden');
+            }
+        });
     }
 
     function loadCalendar() {
@@ -449,28 +469,31 @@
       }
 
       showContentLoader(true);
-      google.script.run.withSuccessHandler(res => {
-        showContentLoader(false);
-        const calendarEl = document.getElementById('calendar');
-        calendarInstance = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'dayGridMonth',
-          height: 'auto',
-          headerToolbar: {
-            left: 'prev,next',
-            center: 'title',
-            right: 'today'
-          },
-          events: res.events,
-          eventClick: function(info) {
-             Swal.fire({
-               title: info.event.title,
-               text: info.event.startStr,
-               confirmButtonColor: '#db2777'
-             });
-          }
+      
+      fetch(`${GAS_API_URL}?op=getCalendar&sheetId=${currentUser.sheetId}&id=${currentUser.id}`)
+        .then(r => r.json())
+        .then(res => {
+            showContentLoader(false);
+            const calendarEl = document.getElementById('calendar');
+            calendarInstance = new FullCalendar.Calendar(calendarEl, {
+              initialView: 'dayGridMonth',
+              height: 'auto',
+              headerToolbar: {
+                left: 'prev,next',
+                center: 'title',
+                right: 'today'
+              },
+              events: res.events,
+              eventClick: function(info) {
+                  Swal.fire({
+                    title: info.event.title,
+                    text: info.event.startStr,
+                    confirmButtonColor: '#db2777'
+                  });
+              }
+            });
+            calendarInstance.render();
         });
-        calendarInstance.render();
-      }).apiGetCalendar(currentUser.sheetId, currentUser.id);
     }
 
     function loadNotes() {
@@ -478,44 +501,47 @@
       if (container.children.length > 0) return;
 
       showContentLoader(true);
-      google.script.run.withSuccessHandler(res => {
-        showContentLoader(false);
-        if (res.success && res.notes.length > 0) {
-           const colors = ['bg-yellow-200', 'bg-pink-200', 'bg-blue-200', 'bg-green-200', 'bg-purple-200'];
-           
-           res.notes.forEach(note => {
-             // Random Position & Rotation
-             const rot = Math.floor(Math.random() * 20) - 10;
-             const top = Math.floor(Math.random() * 60) + 10; // 10% - 70%
-             const left = Math.floor(Math.random() * 60) + 5; // 5% - 65%
-             const color = colors[Math.floor(Math.random() * colors.length)];
-             
-             const div = document.createElement('div');
-             div.className = `sticky-note absolute p-4 w-40 h-auto shadow-md rounded font-serif text-sm cursor-pointer ${color}`;
-             div.style.top = top + '%';
-             div.style.left = left + '%';
-             div.style.transform = `rotate(${rot}deg)`;
-             div.innerHTML = `
-               <p class="mb-2 break-words">${note.content.substring(0,50)}${note.content.length>50?'...':''}</p>
-               <p class="text-right text-xs font-bold text-gray-600">- ${note.from}</p>
-             `;
-             
-             // Bring to front on click
-             div.onclick = () => {
-                Swal.fire({
-                  background: getComputedStyle(div).backgroundColor,
-                  title: `來自 ${note.from}`,
-                  text: note.content,
-                  confirmButtonColor: '#444'
-                });
-             };
-             
-             container.appendChild(div);
-           });
-        } else {
-           container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400">目前沒有小紙條喔</div>';
-        }
-      }).apiGetNotes(currentUser.id);
+      
+      fetch(`${GAS_API_URL}?op=getNotes&id=${currentUser.id}`)
+        .then(r => r.json())
+        .then(res => {
+            showContentLoader(false);
+            if (res.success && res.notes.length > 0) {
+               const colors = ['bg-yellow-200', 'bg-pink-200', 'bg-blue-200', 'bg-green-200', 'bg-purple-200'];
+               
+               res.notes.forEach(note => {
+                 // Random Position & Rotation
+                 const rot = Math.floor(Math.random() * 20) - 10;
+                 const top = Math.floor(Math.random() * 60) + 10; // 10% - 70%
+                 const left = Math.floor(Math.random() * 60) + 5; // 5% - 65%
+                 const color = colors[Math.floor(Math.random() * colors.length)];
+                 
+                 const div = document.createElement('div');
+                 div.className = `sticky-note absolute p-4 w-40 h-auto shadow-md rounded font-serif text-sm cursor-pointer ${color}`;
+                 div.style.top = top + '%';
+                 div.style.left = left + '%';
+                 div.style.transform = `rotate(${rot}deg)`;
+                 div.innerHTML = `
+                   <p class="mb-2 break-words">${note.content.substring(0,50)}${note.content.length>50?'...':''}</p>
+                   <p class="text-right text-xs font-bold text-gray-600">- ${note.from}</p>
+                 `;
+                 
+                 // Bring to front on click
+                 div.onclick = () => {
+                    Swal.fire({
+                      background: getComputedStyle(div).backgroundColor,
+                      title: `來自 ${note.from}`,
+                      text: note.content,
+                      confirmButtonColor: '#444'
+                    });
+                 };
+                 
+                 container.appendChild(div);
+               });
+            } else {
+               container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400">目前沒有小紙條喔</div>';
+            }
+        });
     }
   </script>
 </body>
