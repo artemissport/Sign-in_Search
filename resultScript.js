@@ -1,7 +1,7 @@
 // ==========================================
 // 請填入您最新的 GAS Web App 網址
 // ==========================================
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxE5Wrqr_uPvuHZ6HhE6s3fWfh9j7QX5et4ANiI5SXXcH0_HS9ZL8OUon2B-Jrmd3eA/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyIVxRaUyvXhrYRyCPq56sqtM9fCGNE3AwWz_drKvpxofSaIg5oTHoGzR0JOfEroL1m/exec";
 
 // 全域變數
 let userData = null;
