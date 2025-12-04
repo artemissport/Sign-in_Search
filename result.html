@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <base target="_top">
+
+  <?!= include('resultScript'); ?>
+  <?!= include('styleCSS'); ?>
+</head>
+
+<body>
+  <header>
+    <div class="welcome">
+      <label id="idName" hidden="hidden"><?= id ?></label>
+      <label id="idkey" hidden="hidden"></label>
+      <label id="sheetId" hidden="hidden"><?= sheetId ?></label>
+      <p id="id" class="col-md-12" style="white-space: nowrap;">學號:<?= id ?>，您好</p>
+      <p id="text" class="col-md-12" style="white-space: nowrap;">可以點下方功能查詢心得與簽到狀況喔～查詢要一下子時間</p>
+      <small id="container_tips" class="col-md-12 form-text text-muted">貼心提醒：簽到計算從<?=container_tips?></small>
+    </div>
+    <nav id="form">
+      <input type="button" value="全部心得查詢" onclick="getData()" class="btn btn-primary">
+      <input type="button" value="這個月的累積次數" onclick="drawChart()" class="btn btn-primary">
+      <input type="button" value="簽到細項行事曆" onclick="drawCalendar()" class="btn btn-primary">
+      <input type="button" value="給你愛的小紙條" onclick="drawSticyNote()" class="btn btn-primary" style="display:none">
+    </nav>
+  </header>
+  <main>
+      <small id="tips" class="form-text text-muted"></small>
+      <section class="table-responsive" id="table_div"></section>
+      <section id="chart_sec">
+        <div class="table-responsive" id="chart_div"></div>
+        <p id="signLog">簽到次數 里程碑</p>
+        <div class="imgGroup" id="img_div"></div>
+        <div class="imgCoach" id="imgCoach_div"></div>
+      </section>
+      <section id="calendar_sec">
+        <a href="<?= signSheetUrl ?>" target="_blank" id="signSheetUrl" hidden="hidden">補簽點這裡</a>
+        <div class="table-responsive" id="calendar_div"></div>
+      </section>
+      <section class="container-fluid" id="drawContent"></section>
+  </main>
+  <footer>
+    <div id="footer_div">
+    <p>Copyright © 2023 Artemis線上減重班. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+
+</html>
