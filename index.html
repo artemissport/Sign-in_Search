@@ -50,19 +50,18 @@
       box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
     }
     
-    /* 自定義捲軸 */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #db2777; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #be185d; }
 
-    /* --- 行事曆樣式優化 --- */
+    /* 行事曆樣式優化 */
     .fc-event-container .fc-content {
         white-space: normal !important;
         text-overflow: clip !important;
     }
     .fc-title {
-        white-space: normal !important; /* 讓長標題換行 */
+        white-space: normal !important;
         overflow: visible !important;
         font-size: 0.85rem;
     }
@@ -70,7 +69,6 @@
         height: auto !important;
         margin-bottom: 2px !important;
     }
-    /* 手機版行事曆字體調整 */
     @media (max-width: 640px) {
         .fc-toolbar-title { font-size: 1.2rem !important; }
         .fc-header-toolbar { flex-direction: column; gap: 0.5rem; }
@@ -142,15 +140,30 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-white p-4 rounded-xl shadow-sm text-center">
-          <p class="text-gray-500 text-xs uppercase font-bold">本月簽到</p>
-          <p id="checkInCount" class="text-3xl font-bold text-purple-600 my-1">0</p>
-          <p class="text-xs text-gray-400">次</p>
+          <p class="text-gray-500 text-xs uppercase font-bold mb-3 border-b pb-1">本月簽到統計</p>
+          <div class="flex justify-between items-center px-2">
+            <div class="flex flex-col">
+               <span class="text-xs text-gray-400 mb-1">任務</span>
+               <span id="cntTask" class="text-xl font-bold text-green-600">0</span>
+            </div>
+            <div class="w-px h-8 bg-gray-200"></div>
+            <div class="flex flex-col">
+               <span class="text-xs text-gray-400 mb-1">運動</span>
+               <span id="cntSport" class="text-xl font-bold text-pink-600">0</span>
+            </div>
+            <div class="w-px h-8 bg-gray-200"></div>
+            <div class="flex flex-col">
+               <span class="text-xs text-gray-400 mb-1">總計</span>
+               <span id="cntTotal" class="text-2xl font-bold text-purple-600">0</span>
+            </div>
+          </div>
         </div>
-        <div class="bg-white p-4 rounded-xl shadow-sm text-center cursor-pointer transition hover:bg-pink-50" onclick="window.open(currentUser.signUrl, '_blank')">
-          <p class="text-gray-500 text-xs uppercase font-bold">快速補簽</p>
-          <div class="flex justify-center items-center h-full pb-6">
+
+        <div class="bg-white p-4 rounded-xl shadow-sm text-center cursor-pointer transition hover:bg-pink-50 flex flex-col justify-center items-center" onclick="window.open(currentUser.signUrl, '_blank')">
+          <p class="text-gray-500 text-xs uppercase font-bold mb-2">快速補簽</p>
+          <div class="flex justify-center items-center">
              <i class="fa-solid fa-pen-to-square text-3xl text-pink-500 animate-pulse"></i>
           </div>
         </div>
@@ -178,24 +191,20 @@
         
         <div id="view-records" class="tab-content">
           <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">心得與簽到詳細記錄</h3>
-          
-          <div id="recordsContainer" class="space-y-4">
-              </div>
-
+          <div id="recordsContainer" class="space-y-4"></div>
           <div id="noRecords" class="hidden text-center py-10 text-gray-400">
               <div class="mb-2">暫無資料</div>
               <div id="debugInfo" class="text-xs bg-red-50 text-red-600 p-2 rounded border border-red-200 inline-block mx-auto max-w-md text-left hidden">
-                <p class="font-bold"><i class="fa-solid fa-bug"></i> 偵錯資訊 (請截圖給小天使):</p>
-                <p>系統搜尋學號：<span id="debugId"></span></p>
-                <p>系統搜尋區間：<span id="debugRange"></span></p>
+                <p class="font-bold"><i class="fa-solid fa-bug"></i> 偵錯資訊:</p>
+                <p>學號：<span id="debugId"></span></p>
+                <p>區間：<span id="debugRange"></span></p>
               </div>
           </div>
         </div>
 
         <div id="view-stats" class="tab-content hidden">
           <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">我的成就與勳章</h3>
-          <div id="badgeContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            </div>
+          <div id="badgeContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
           <div id="noBadges" class="hidden text-center py-10 text-gray-400">繼續努力，勳章即將到手！</div>
         </div>
 
@@ -205,8 +214,7 @@
 
         <div id="view-notes" class="tab-content hidden">
           <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">給你的愛的小紙條</h3>
-          <div id="notesContainer" class="relative h-[400px] w-full overflow-hidden bg-yellow-50 rounded-xl border border-yellow-200">
-            </div>
+          <div id="notesContainer" class="relative h-[400px] w-full overflow-hidden bg-yellow-50 rounded-xl border border-yellow-200"></div>
         </div>
 
       </div>
@@ -223,7 +231,7 @@
 
   <script>
     // ============================================
-    // 【重要】請填入您最新部署到 GAS 的 Web App URL
+    // 【重要】請確認這是您最新的 GAS Web App URL
     // ============================================
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwyasaaysx1c5Dpznn_xn5DMFSSolLQd_KDmcrv22PAT7YrW8H8jcpumg3UjNQ72QDu/exec";
 
@@ -235,7 +243,6 @@
         const storedUser = sessionStorage.getItem('artemis_user');
         if (storedUser) {
             const parsed = JSON.parse(storedUser);
-            // 恢復上次登入狀態
             document.getElementById('phoneNumber').value = parsed.user.phone;
             handleLogin(null, parsed); 
         }
@@ -251,7 +258,6 @@
     function handleLogin(e, restoredData = null) {
       if(e) e.preventDefault();
       
-      // 如果有快取資料，直接使用，不用再打 API
       if (restoredData) {
          currentUser = restoredData.user;
          initDashboard(restoredData);
@@ -316,7 +322,12 @@
       document.getElementById('headerUserName').innerText = data.user.name;
       document.getElementById('periodDate').innerText = data.user.period;
       document.getElementById('coachTip').innerText = data.coachTip;
-      document.getElementById('checkInCount').innerText = data.checkInCount;
+      
+      // 【修正】這裡讀取 checkInStats 並顯示在三欄位中
+      const stats = data.checkInStats || { total: data.checkInCount || 0, task: 0, sport: 0 };
+      document.getElementById('cntTask').innerText = stats.task;
+      document.getElementById('cntSport').innerText = stats.sport;
+      document.getElementById('cntTotal').innerText = stats.total;
 
       switchTab('records');
     }
@@ -494,7 +505,6 @@
                 center: 'title',
                 right: 'today'
               },
-              // 直接使用後端回傳的事件 (已包含 yyyy-MM-dd 與標題)
               events: res.events, 
               
               eventClick: function(info) {
