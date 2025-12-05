@@ -1,548 +1,70 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Artemis 線上減重班</title>
+// --- 修改後的 loadCalendar ---
+function loadCalendar() {
+  const calendarEl = document.getElementById('calendar');
+
+  // 如果行事曆已經初始化過，就不重新抓資料，直接顯示
+  // 但因為我們是切換 Tab，FullCalendar 可能會因為隱藏而破圖，所以需要 updateSize
+  if (calendarInstance) {
+    // 稍微延遲一下，確保 DOM display:block 已經生效後再 resize
+    setTimeout(() => {
+        calendarInstance.updateSize(); 
+    }, 100);
+    return;
+  }
+
+  showContentLoader(true);
   
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            artemis: {
-              light: '#fce7f3', // pink-100
-              main: '#be185d',  // pink-700
-              dark: '#831843',  // pink-900
-              bg: '#fff1f2',    // rose-50
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
-    body { font-family: 'Noto Sans TC', sans-serif; background-color: #fff1f2; }
-    
-    .loader {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #be185d;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    .sticky-note {
-      transition: transform 0.2s;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-    }
-    .sticky-note:hover {
-      transform: scale(1.05) rotate(0deg) !important;
-      z-index: 10;
-      box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
-    }
-    
-    /* 自定義捲軸 */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #db2777; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #be185d; }
-
-    /* --- 行事曆文字自動換行修正 --- */
-    .fc-event-container .fc-content {
-        white-space: normal !important;
-        text-overflow: clip !important;
-    }
-    .fc-title {
-        white-space: normal !important;
-        overflow: visible !important;
-    }
-    .fc-day-grid-event {
-        height: auto !important;
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col text-gray-800">
-
-  <header class="bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg sticky top-0 z-50">
-    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center space-x-2">
-        <i class="fa-solid fa-moon text-yellow-200 text-xl"></i>
-        <h1 class="text-xl font-bold tracking-wider flex flex-col sm:flex-row sm:items-end sm:gap-2 leading-none">
-          Artemis 
-          <span class="text-xs sm:text-sm font-normal text-pink-100 opacity-90 tracking-normal">線上減重班</span>
-        </h1>
-      </div>
-      <div id="userInfo" class="hidden text-sm font-medium bg-white/20 px-3 py-1 rounded-full flex items-center gap-2">
-        <span id="headerUserName">學員</span>
-        <button onclick="logout()" class="text-xs bg-pink-700 hover:bg-pink-800 px-2 py-1 rounded transition">登出</button>
-      </div>
-    </div>
-  </header>
-
-  <main class="flex-grow container mx-auto px-4 py-6 relative">
-    
-    <div id="loginSection" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden mt-10 transition-all duration-500">
-      <div class="bg-pink-100 p-6 text-center">
-        <div class="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center shadow-md mb-4">
-          <i class="fa-solid fa-user-lock text-3xl text-pink-500"></i>
-        </div>
-        <h2 class="text-2xl font-bold text-gray-700">學員登入</h2>
-      </div>
-      <div class="p-8">
-        <form id="loginForm" onsubmit="handleLogin(event)">
-          <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="phoneNumber">
-              手機號碼
-            </label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                <i class="fa-solid fa-phone"></i>
-              </span>
-              <input class="w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-pink-500 transition-colors" 
-                     id="phoneNumber" type="tel" placeholder="請輸入手機號碼" required>
-            </div>
-          </div>
-          <button id="loginBtn" type="submit" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold py-3 rounded-xl hover:shadow-lg transform transition hover:-translate-y-1">
-            <span id="loginBtnText">開始查詢</span>
-            <div id="loginLoader" class="loader w-6 h-6 border-white border-t-transparent mx-auto hidden"></div>
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <div id="dashboardSection" class="hidden space-y-6">
-      
-      <div class="bg-white rounded-2xl shadow-md p-6 border-l-4 border-purple-500 relative overflow-hidden">
-        <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4">
-          <i class="fa-solid fa-crown text-9xl text-purple-600"></i>
-        </div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">Hi, <span id="userName" class="text-pink-600"></span> <span id="className" class="text-sm text-gray-500 font-normal ml-2 bg-gray-100 px-2 py-1 rounded-md"></span></h2>
-        <p class="text-gray-600 text-sm mb-4">統計區間：<span id="periodDate"></span></p>
-        <div class="bg-pink-50 rounded-lg p-4 border border-pink-100">
-          <p class="text-pink-800 font-medium flex items-start">
-            <i class="fa-solid fa-circle-info mt-1 mr-2 text-pink-500"></i>
-            <span id="coachTip">載入中...</span>
-          </p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded-xl shadow-sm text-center">
-          <p class="text-gray-500 text-xs uppercase font-bold">本月簽到</p>
-          <p id="checkInCount" class="text-3xl font-bold text-purple-600 my-1">0</p>
-          <p class="text-xs text-gray-400">次</p>
-        </div>
-        <div class="bg-white p-4 rounded-xl shadow-sm text-center cursor-pointer transition hover:bg-pink-50" onclick="window.open(currentUser.signUrl, '_blank')">
-          <p class="text-gray-500 text-xs uppercase font-bold">快速補簽</p>
-          <div class="flex justify-center items-center h-full pb-6">
-             <i class="fa-solid fa-pen-to-square text-3xl text-pink-500 animate-pulse"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
-        <button onclick="switchTab('records')" class="tab-btn active flex-shrink-0 bg-white px-6 py-2 rounded-full shadow-sm text-sm font-medium border border-gray-200 text-gray-600 hover:text-pink-600 focus:outline-none transition-all">
-          <i class="fa-solid fa-list-ul mr-1"></i> 心得記錄
-        </button>
-        <button onclick="switchTab('stats')" class="tab-btn flex-shrink-0 bg-white px-6 py-2 rounded-full shadow-sm text-sm font-medium border border-gray-200 text-gray-600 hover:text-pink-600 focus:outline-none transition-all">
-          <i class="fa-solid fa-chart-pie mr-1"></i> 勳章成就
-        </button>
-        <button onclick="switchTab('calendar')" class="tab-btn flex-shrink-0 bg-white px-6 py-2 rounded-full shadow-sm text-sm font-medium border border-gray-200 text-gray-600 hover:text-pink-600 focus:outline-none transition-all">
-          <i class="fa-regular fa-calendar-check mr-1"></i> 行事曆
-        </button>
-        <button onclick="switchTab('notes')" class="tab-btn flex-shrink-0 bg-white px-6 py-2 rounded-full shadow-sm text-sm font-medium border border-gray-200 text-gray-600 hover:text-pink-600 focus:outline-none transition-all">
-          <i class="fa-regular fa-note-sticky mr-1"></i> 小紙條
-        </button>
-      </div>
-
-      <div id="contentArea" class="bg-white rounded-2xl shadow-lg min-h-[300px] p-4 relative">
-        <div id="contentLoader" class="absolute inset-0 flex items-center justify-center bg-white z-10 hidden">
-          <div class="loader"></div>
-        </div>
+  // 使用 fetch 從後端抓資料
+  fetch(`${GAS_API_URL}?op=getCalendar&sheetId=${currentUser.sheetId}&id=${currentUser.id}`)
+    .then(r => r.json())
+    .then(res => {
+        showContentLoader(false);
         
-        <div id="view-records" class="tab-content">
-          <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">心得與簽到詳細記錄</h3>
+        // 檢查後端回傳資料
+        if (!res.success) {
+            Swal.fire('錯誤', '無法讀取行事曆資料', 'error');
+            return;
+        }
+
+        // 初始化 FullCalendar
+        calendarInstance = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          height: 'auto',
+          locale: 'zh-tw', // 設定為中文
+          headerToolbar: {
+            left: 'prev,next',
+            center: 'title',
+            right: 'today'
+          },
+          // 將抓到的 events 直接餵進去
+          events: res.events, 
           
-          <div id="recordsContainer" class="space-y-4">
-              </div>
-
-          <div id="noRecords" class="hidden text-center py-10 text-gray-400">
-              <div class="mb-2">暫無資料</div>
-              <div id="debugInfo" class="text-xs bg-red-50 text-red-600 p-2 rounded border border-red-200 inline-block mx-auto max-w-md text-left hidden">
-                <p class="font-bold"><i class="fa-solid fa-bug"></i> 偵錯資訊 (請截圖給小天使):</p>
-                <p>系統搜尋學號：<span id="debugId"></span></p>
-                <p>系統搜尋區間：<span id="debugRange"></span></p>
-              </div>
-          </div>
-        </div>
-
-        <div id="view-stats" class="tab-content hidden">
-          <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">我的成就與勳章</h3>
-          <div id="badgeContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            </div>
-          <div id="noBadges" class="hidden text-center py-10 text-gray-400">繼續努力，勳章即將到手！</div>
-        </div>
-
-        <div id="view-calendar" class="tab-content hidden">
-          <div id="calendar" class="text-sm"></div>
-        </div>
-
-        <div id="view-notes" class="tab-content hidden">
-          <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">給你的愛的小紙條</h3>
-          <div id="notesContainer" class="relative h-[400px] w-full overflow-hidden bg-yellow-50 rounded-xl border border-yellow-200">
-            </div>
-        </div>
-
-      </div>
-
-    </div>
-  </main>
-
-  <footer class="bg-white border-t border-gray-200 py-4 mt-8">
-    <div class="text-center text-xs text-gray-400">
-      <p>Copyright © 2025 Artemis 線上減重班.</p>
-      <p>All rights reserved.</p>
-    </div>
-  </footer>
-
-  <script>
-    // ============================================
-    // 【重要】請填入您部署到 GAS 取得的 Web App URL
-    // ============================================
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwyasaaysx1c5Dpznn_xn5DMFSSolLQd_KDmcrv22PAT7YrW8H8jcpumg3UjNQ72QDu/exec";
-
-    let currentUser = null;
-    let calendarInstance = null;
-
-    // 頁面載入時檢查是否已登入
-    window.addEventListener('load', function() {
-        const storedUser = sessionStorage.getItem('artemis_user');
-        if (storedUser) {
-            const parsed = JSON.parse(storedUser);
-            // 恢復上次登入狀態
-            document.getElementById('phoneNumber').value = parsed.user.phone;
-            handleLogin(null, parsed); 
-        }
-    });
-
-    // 登出功能
-    function logout() {
-        sessionStorage.removeItem('artemis_user');
-        window.location.reload();
-    }
-
-    // Login Handler
-    function handleLogin(e, restoredData = null) {
-      if(e) e.preventDefault();
-      
-      // 如果有快取資料，直接使用，不用再打 API
-      if (restoredData) {
-         currentUser = restoredData.user;
-         initDashboard(restoredData);
-         return;
-      }
-
-      const phone = document.getElementById('phoneNumber').value.trim();
-      if (!phone) return;
-
-      const btnText = document.getElementById('loginBtnText');
-      const loader = document.getElementById('loginLoader');
-      const btn = document.getElementById('loginBtn');
-
-      btnText.classList.add('hidden');
-      loader.classList.remove('hidden');
-      btn.disabled = true;
-
-      // 改用 fetch 呼叫 GAS API
-      fetch(`${GAS_API_URL}?op=login&phone=${phone}`)
-        .then(res => res.json())
-        .then(response => {
-           btnText.classList.remove('hidden');
-           loader.classList.add('hidden');
-           btn.disabled = false;
-
-           if (response.success) {
-             currentUser = response.user;
-             // 儲存登入狀態
-             sessionStorage.setItem('artemis_user', JSON.stringify(response));
-             initDashboard(response);
-           } else {
-             Swal.fire({
-               icon: 'error',
-               title: '登入失敗',
-               text: response.message,
-               confirmButtonColor: '#db2777'
-             });
-           }
-        })
-        .catch(err => {
-           console.error(err);
-           btnText.classList.remove('hidden');
-           loader.classList.add('hidden');
-           btn.disabled = false;
-           Swal.fire('系統錯誤', '無法連接到伺服器，請檢查網路或 GAS 設定。', 'error');
-        });
-    }
-
-    function initDashboard(data) {
-      // Hide Login, Show Dashboard
-      document.getElementById('loginSection').classList.add('hidden');
-      document.getElementById('dashboardSection').classList.remove('hidden');
-      document.getElementById('userInfo').classList.remove('hidden');
-
-      // Populate Basic Info
-      document.getElementById('userName').innerText = data.user.name;
-      // Show class name if available
-      if(data.user.className) {
-         document.getElementById('className').innerText = data.user.className;
-         document.getElementById('className').classList.remove('hidden');
-      } else {
-         document.getElementById('className').classList.add('hidden');
-      }
-      
-      document.getElementById('headerUserName').innerText = data.user.name;
-      document.getElementById('periodDate').innerText = data.user.period;
-      document.getElementById('coachTip').innerText = data.coachTip;
-      document.getElementById('checkInCount').innerText = data.checkInCount;
-
-      // Load initial tab
-      switchTab('records');
-    }
-
-    // Tab Switching
-    function switchTab(tabName) {
-      // Update Tab Styles
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('bg-pink-500', 'text-white');
-        btn.classList.add('bg-white', 'text-gray-600');
-        if(btn.onclick.toString().includes(tabName)) {
-           btn.classList.remove('bg-white', 'text-gray-600');
-           btn.classList.add('bg-pink-500', 'text-white');
-        }
-      });
-
-      // Hide all contents
-      document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
-      document.getElementById('view-' + tabName).classList.remove('hidden');
-
-      // Load Data based on tab
-      if (tabName === 'records') loadRecords();
-      if (tabName === 'stats') loadStats();
-      if (tabName === 'calendar') loadCalendar();
-      if (tabName === 'notes') loadNotes();
-    }
-
-    // --- Data Loading Functions ---
-
-    function showContentLoader(show) {
-      const loader = document.getElementById('contentLoader');
-      if (show) loader.classList.remove('hidden');
-      else loader.classList.add('hidden');
-    }
-
-    // Helper to render habit list (split by comma ONLY)
-    function renderHabitSection(title, content, textColor, bgColor) {
-      if(!content) return '';
-      // Split by comma (,) ONLY as requested. Full-width comma (，) is preserved.
-      const items = String(content).split(/,/).filter(s => s.trim());
-      if(items.length === 0) return '';
-      
-      let html = `<div class="${bgColor} p-3 rounded-lg border border-opacity-50 border-${textColor.replace('text-', '')}">
-                    <h4 class="font-bold ${textColor} text-xs uppercase mb-2 border-b ${textColor} border-opacity-20 pb-1">${title}</h4>
-                    <ul class="text-sm space-y-1">`;
-      items.forEach(item => {
-        html += `<li class="flex items-start text-gray-700">
-                   <i class="fa-solid fa-check ${textColor} mt-1 mr-2 text-xs"></i>
-                   <span>${item.trim()}</span>
-                 </li>`;
-      });
-      html += `</ul></div>`;
-      return html;
-    }
-
-    function loadRecords() {
-      const container = document.getElementById('recordsContainer');
-      if (container.children.length > 0) return; // Already loaded
-
-      showContentLoader(true);
-      
-      // 使用 fetch API
-      fetch(`${GAS_API_URL}?op=getRecords&sheetId=${currentUser.sheetId}&id=${currentUser.id}`)
-        .then(r => r.json())
-        .then(res => {
-            showContentLoader(false);
-            if (res.success && res.data.length > 0) {
-              // Hide no records msg
-              document.getElementById('noRecords').classList.add('hidden');
-              
-              let cardsHtml = '';
-              res.data.forEach(record => {
-                  // Card Structure
-                  cardsHtml += `
-                  <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-pink-100 transition hover:shadow-md">
-                    <div class="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-4 py-2 font-bold text-sm flex justify-between items-center">
-                      <span><i class="fa-regular fa-calendar mr-2"></i>${record.date}</span>
-                      <i class="fa-solid fa-circle-check opacity-50"></i>
-                    </div>
-                    
-                    <div class="p-4 space-y-3">
-                      <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 relative border border-gray-100">
-                          <div class="absolute -top-2 left-2 bg-white px-2 text-xs text-gray-400 border border-gray-100 rounded-full shadow-sm">心得</div>
-                          <p class="mt-1">${record.note || '<span class="text-gray-400 italic">未填寫心得</span>'}</p>
-                      </div>
-
-                      ${ record.coachMsg ? `
-                      <div class="bg-yellow-50 p-3 rounded-lg text-sm text-gray-800 border border-yellow-200 relative mt-4">
-                          <div class="absolute -top-2 left-2 bg-yellow-100 px-2 text-xs text-yellow-700 font-bold rounded-full shadow-sm border border-yellow-200">校長留言</div>
-                          <p class="mt-1">${record.coachMsg}</p>
-                      </div>` : '' }
-
-                      <div class="grid grid-cols-1 gap-2 mt-2">
-                          ${renderHabitSection('Add', record.add, 'text-blue-600', 'bg-blue-50')}
-                          ${renderHabitSection('Build', record.build, 'text-green-600', 'bg-green-50')}
-                          ${renderHabitSection('Cancel', record.cancel, 'text-red-600', 'bg-red-50')}
-                      </div>
-                    </div>
-                  </div>
-                  `;
+          // 點擊事件彈窗
+          eventClick: function(info) {
+              Swal.fire({
+                title: info.event.title,
+                text: info.event.startStr, // 顯示日期
+                confirmButtonColor: '#db2777'
               });
-              container.innerHTML = cardsHtml;
-
-            } else {
-              const noRecordsDiv = document.getElementById('noRecords');
-              noRecordsDiv.classList.remove('hidden');
-              
-              // Show Debug Info
-              if (res.debugInfo) {
-                  document.getElementById('debugInfo').classList.remove('hidden');
-                  document.getElementById('debugId').innerText = res.debugInfo.searchId;
-                  document.getElementById('debugRange').innerText = `${res.debugInfo.searchStart} ~ ${res.debugInfo.searchEnd}`;
-              }
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            showContentLoader(false);
-            container.innerHTML = '<div class="text-center py-4 text-red-500">資料載入失敗</div>';
+          },
+          
+          // 解決切換 Tab 後可能破圖的問題
+          windowResize: function(view) {
+              calendarInstance.updateSize();
+          }
         });
-    }
 
-    function loadStats() {
-      const container = document.getElementById('badgeContainer');
-      if (container.children.length > 0) return;
-
-      showContentLoader(true);
-      
-      fetch(`${GAS_API_URL}?op=getStats&sheetId=${currentUser.sheetId}&id=${currentUser.id}`)
-        .then(r => r.json())
-        .then(res => {
-            showContentLoader(false);
-            if (res.success && res.badges.length > 0) {
-               res.badges.forEach(b => {
-                 const card = `
-                   <div class="flex flex-col items-center p-3 bg-pink-50 rounded-lg border border-pink-100">
-                     <img src="${b.img}" alt="${b.name}" class="w-20 h-20 object-contain mb-2 drop-shadow-md" referrerpolicy="no-referrer">
-                     <span class="text-xs font-bold text-gray-600 text-center">${b.name}</span>
-                   </div>
-                 `;
-                 container.innerHTML += card;
-               });
-            } else {
-               document.getElementById('noBadges').classList.remove('hidden');
-            }
-        });
-    }
-
-    function loadCalendar() {
-      if (calendarInstance) {
+        // 渲染行事曆
         calendarInstance.render();
-        return; 
-      }
-
-      showContentLoader(true);
-      
-      fetch(`${GAS_API_URL}?op=getCalendar&sheetId=${currentUser.sheetId}&id=${currentUser.id}`)
-        .then(r => r.json())
-        .then(res => {
-            showContentLoader(false);
-            const calendarEl = document.getElementById('calendar');
-            calendarInstance = new FullCalendar.Calendar(calendarEl, {
-              initialView: 'dayGridMonth',
-              height: 'auto',
-              headerToolbar: {
-                left: 'prev,next',
-                center: 'title',
-                right: 'today'
-              },
-              events: res.events,
-              eventClick: function(info) {
-                  Swal.fire({
-                    title: info.event.title,
-                    text: info.event.startStr,
-                    confirmButtonColor: '#db2777'
-                  });
-              }
-            });
-            calendarInstance.render();
-        });
-    }
-
-    function loadNotes() {
-      const container = document.getElementById('notesContainer');
-      if (container.children.length > 0) return;
-
-      showContentLoader(true);
-      
-      fetch(`${GAS_API_URL}?op=getNotes&id=${currentUser.id}`)
-        .then(r => r.json())
-        .then(res => {
-            showContentLoader(false);
-            if (res.success && res.notes.length > 0) {
-               const colors = ['bg-yellow-200', 'bg-pink-200', 'bg-blue-200', 'bg-green-200', 'bg-purple-200'];
-               
-               res.notes.forEach(note => {
-                 // Random Position & Rotation
-                 const rot = Math.floor(Math.random() * 20) - 10;
-                 const top = Math.floor(Math.random() * 60) + 10; // 10% - 70%
-                 const left = Math.floor(Math.random() * 60) + 5; // 5% - 65%
-                 const color = colors[Math.floor(Math.random() * colors.length)];
-                 
-                 const div = document.createElement('div');
-                 div.className = `sticky-note absolute p-4 w-40 h-auto shadow-md rounded font-serif text-sm cursor-pointer ${color}`;
-                 div.style.top = top + '%';
-                 div.style.left = left + '%';
-                 div.style.transform = `rotate(${rot}deg)`;
-                 div.innerHTML = `
-                   <p class="mb-2 break-words">${note.content.substring(0,50)}${note.content.length>50?'...':''}</p>
-                   <p class="text-right text-xs font-bold text-gray-600">- ${note.from}</p>
-                 `;
-                 
-                 // Bring to front on click
-                 div.onclick = () => {
-                    Swal.fire({
-                      background: getComputedStyle(div).backgroundColor,
-                      title: `來自 ${note.from}`,
-                      text: note.content,
-                      confirmButtonColor: '#444'
-                    });
-                 };
-                 
-                 container.appendChild(div);
-               });
-            } else {
-               container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400">目前沒有小紙條喔</div>';
-            }
-        });
-    }
-  </script>
-</body>
-</html>
+        
+        // 強制再 resize 一次確保寬度正確
+        setTimeout(() => {
+            calendarInstance.updateSize();
+        }, 100);
+    })
+    .catch(err => {
+        console.error(err);
+        showContentLoader(false);
+        Swal.fire('系統錯誤', '行事曆載入失敗', 'error');
+    });
+}
