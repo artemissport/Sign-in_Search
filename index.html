@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Artemis 線上減重班</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -55,23 +55,31 @@
     ::-webkit-scrollbar-thumb { background: #db2777; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #be185d; }
 
-    /* 行事曆樣式優化 */
-    .fc-event-container .fc-content {
-        white-space: normal !important;
-        text-overflow: clip !important;
-    }
-    .fc-title {
-        white-space: normal !important;
-        overflow: visible !important;
-        font-size: 0.85rem;
-    }
-    .fc-day-grid-event {
-        height: auto !important;
+    /* =========================================
+       【修正】行事曆手機版顯示優化 CSS
+       ========================================= */
+    .fc-event {
+        height: auto !important; 
+        min-height: 1.2em;
         margin-bottom: 2px !important;
+        cursor: pointer;
+    }
+    .fc-event-main {
+        white-space: normal !important; 
+        overflow: visible !important;
+    }
+    .fc-event-title {
+        white-space: normal !important; 
+        word-break: break-word !important; 
+        overflow: visible !important;
+        font-size: 0.75rem !important; /* 字體縮小 */
+        line-height: 1.1 !important;
+        padding: 1px 0;
     }
     @media (max-width: 640px) {
         .fc-toolbar-title { font-size: 1.2rem !important; }
         .fc-header-toolbar { flex-direction: column; gap: 0.5rem; }
+        .fc-event-title { font-size: 0.7rem !important; }
     }
   </style>
 </head>
@@ -238,7 +246,6 @@
     let currentUser = null;
     let calendarInstance = null;
 
-    // 頁面載入時檢查是否已登入
     window.addEventListener('load', function() {
         const storedUser = sessionStorage.getItem('artemis_user');
         if (storedUser) {
@@ -248,21 +255,14 @@
         }
     });
 
-    // 登出功能
     function logout() {
         sessionStorage.removeItem('artemis_user');
         window.location.reload();
     }
 
-    // Login Handler
     function handleLogin(e, restoredData = null) {
       if(e) e.preventDefault();
-      
-      if (restoredData) {
-         currentUser = restoredData.user;
-         initDashboard(restoredData);
-         return;
-      }
+      if (restoredData) { currentUser = restoredData.user; initDashboard(restoredData); return; }
 
       const phone = document.getElementById('phoneNumber').value.trim();
       if (!phone) return;
@@ -275,7 +275,6 @@
       loader.classList.remove('hidden');
       btn.disabled = true;
 
-      // 使用 fetch 呼叫 GAS
       fetch(`${GAS_API_URL}?op=login&phone=${phone}`)
         .then(res => res.json())
         .then(response => {
@@ -311,7 +310,6 @@
       document.getElementById('userInfo').classList.remove('hidden');
 
       document.getElementById('userName').innerText = data.user.name;
-      
       if(data.user.className) {
          document.getElementById('className').innerText = data.user.className;
          document.getElementById('className').classList.remove('hidden');
@@ -323,7 +321,7 @@
       document.getElementById('periodDate').innerText = data.user.period;
       document.getElementById('coachTip').innerText = data.coachTip;
       
-      // 【修正】這裡讀取 checkInStats 並顯示在三欄位中
+      // 【修正】填入詳細三欄位統計數據
       const stats = data.checkInStats || { total: data.checkInCount || 0, task: 0, sport: 0 };
       document.getElementById('cntTask').innerText = stats.task;
       document.getElementById('cntSport').innerText = stats.sport;
@@ -332,7 +330,6 @@
       switchTab('records');
     }
 
-    // Tab Switching
     function switchTab(tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('bg-pink-500', 'text-white');
@@ -350,7 +347,7 @@
       if (tabName === 'stats') loadStats();
       if (tabName === 'calendar') {
           loadCalendar();
-          // 【關鍵修復】切換 Tab 時強制重繪日曆
+          // 【修正】切換 Tab 時強制重繪日曆
           if (calendarInstance) {
               setTimeout(() => {
                   calendarInstance.updateSize(); 
@@ -359,8 +356,6 @@
       }
       if (tabName === 'notes') loadNotes();
     }
-
-    // --- Data Loading Functions ---
 
     function showContentLoader(show) {
       const loader = document.getElementById('contentLoader');
