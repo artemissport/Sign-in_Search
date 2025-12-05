@@ -56,17 +56,24 @@
     ::-webkit-scrollbar-thumb { background: #db2777; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #be185d; }
 
-    /* --- 行事曆文字自動換行修正 --- */
+    /* --- 行事曆樣式優化 --- */
     .fc-event-container .fc-content {
         white-space: normal !important;
         text-overflow: clip !important;
     }
     .fc-title {
-        white-space: normal !important;
+        white-space: normal !important; /* 讓長標題換行 */
         overflow: visible !important;
+        font-size: 0.85rem;
     }
     .fc-day-grid-event {
         height: auto !important;
+        margin-bottom: 2px !important;
+    }
+    /* 手機版行事曆字體調整 */
+    @media (max-width: 640px) {
+        .fc-toolbar-title { font-size: 1.2rem !important; }
+        .fc-header-toolbar { flex-direction: column; gap: 0.5rem; }
     }
   </style>
 </head>
@@ -178,9 +185,9 @@
           <div id="noRecords" class="hidden text-center py-10 text-gray-400">
               <div class="mb-2">暫無資料</div>
               <div id="debugInfo" class="text-xs bg-red-50 text-red-600 p-2 rounded border border-red-200 inline-block mx-auto max-w-md text-left hidden">
-                <p class="font-bold"><i class="fa-solid fa-bug"></i> 偵錯資訊 (請截圖給小天使):</p>
-                <p>系統搜尋學號：<span id="debugId"></span></p>
-                <p>系統搜尋區間：<span id="debugRange"></span></p>
+                <p class="font-bold"><i class="fa-solid fa-bug"></i> 偵錯資訊:</p>
+                <p>學號：<span id="debugId"></span></p>
+                <p>區間：<span id="debugRange"></span></p>
               </div>
           </div>
         </div>
@@ -260,6 +267,7 @@
       loader.classList.remove('hidden');
       btn.disabled = true;
 
+      // 使用 fetch 呼叫 GAS
       fetch(`${GAS_API_URL}?op=login&phone=${phone}`)
         .then(res => res.json())
         .then(response => {
@@ -295,6 +303,7 @@
       document.getElementById('userInfo').classList.remove('hidden');
 
       document.getElementById('userName').innerText = data.user.name;
+      
       if(data.user.className) {
          document.getElementById('className').innerText = data.user.className;
          document.getElementById('className').classList.remove('hidden');
@@ -376,6 +385,7 @@
             showContentLoader(false);
             if (res.success && res.data.length > 0) {
               document.getElementById('noRecords').classList.add('hidden');
+              
               let cardsHtml = '';
               res.data.forEach(record => {
                   cardsHtml += `
@@ -384,16 +394,19 @@
                       <span><i class="fa-regular fa-calendar mr-2"></i>${record.date}</span>
                       <i class="fa-solid fa-circle-check opacity-50"></i>
                     </div>
+                    
                     <div class="p-4 space-y-3">
                       <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 relative border border-gray-100">
                           <div class="absolute -top-2 left-2 bg-white px-2 text-xs text-gray-400 border border-gray-100 rounded-full shadow-sm">心得</div>
                           <p class="mt-1">${record.note || '<span class="text-gray-400 italic">未填寫心得</span>'}</p>
                       </div>
+
                       ${ record.coachMsg ? `
                       <div class="bg-yellow-50 p-3 rounded-lg text-sm text-gray-800 border border-yellow-200 relative mt-4">
                           <div class="absolute -top-2 left-2 bg-yellow-100 px-2 text-xs text-yellow-700 font-bold rounded-full shadow-sm border border-yellow-200">校長留言</div>
                           <p class="mt-1">${record.coachMsg}</p>
                       </div>` : '' }
+
                       <div class="grid grid-cols-1 gap-2 mt-2">
                           ${renderHabitSection('Add', record.add, 'text-blue-600', 'bg-blue-50')}
                           ${renderHabitSection('Build', record.build, 'text-green-600', 'bg-green-50')}
@@ -404,9 +417,11 @@
                   `;
               });
               container.innerHTML = cardsHtml;
+
             } else {
               const noRecordsDiv = document.getElementById('noRecords');
               noRecordsDiv.classList.remove('hidden');
+              
               if (res.debugInfo) {
                   document.getElementById('debugInfo').classList.remove('hidden');
                   document.getElementById('debugId').innerText = res.debugInfo.searchId;
@@ -416,7 +431,7 @@
         })
         .catch(err => {
             showContentLoader(false);
-            container.innerHTML = '<div class="text-center py-4 text-red-500">資料載入失敗</div>';
+            container.innerHTML = '<div class="text-center py-4 text-red-500">資料讀取失敗</div>';
         });
     }
 
@@ -425,6 +440,7 @@
       if (container.children.length > 0) return;
 
       showContentLoader(true);
+      
       fetch(`${GAS_API_URL}?op=getStats&sheetId=${currentUser.sheetId}&id=${currentUser.id}`)
         .then(r => r.json())
         .then(res => {
@@ -466,6 +482,7 @@
             // 檢查是否成功
             if (!res.success) {
                 console.error("Calendar Load Failed", res);
+                Swal.fire('錯誤', '行事曆載入失敗', 'error');
                 return;
             }
 
@@ -479,7 +496,7 @@
                 center: 'title',
                 right: 'today'
               },
-              // 這裡直接填入後端抓回來的 events 陣列
+              // 這裡直接填入後端抓回來的 events 陣列 (後端已包含 title 處理)
               events: res.events, 
               
               eventClick: function(info) {
@@ -502,7 +519,7 @@
         .catch(err => {
             console.error(err);
             showContentLoader(false);
-            Swal.fire('錯誤', '行事曆載入失敗', 'error');
+            Swal.fire('錯誤', '行事曆連線失敗', 'error');
         });
     }
 
@@ -533,6 +550,7 @@
                    <p class="mb-2 break-words">${note.content.substring(0,50)}${note.content.length>50?'...':''}</p>
                    <p class="text-right text-xs font-bold text-gray-600">- ${note.from}</p>
                  `;
+                 
                  div.onclick = () => {
                     Swal.fire({
                       background: getComputedStyle(div).backgroundColor,
