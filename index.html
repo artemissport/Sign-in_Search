@@ -185,9 +185,9 @@
           <div id="noRecords" class="hidden text-center py-10 text-gray-400">
               <div class="mb-2">暫無資料</div>
               <div id="debugInfo" class="text-xs bg-red-50 text-red-600 p-2 rounded border border-red-200 inline-block mx-auto max-w-md text-left hidden">
-                <p class="font-bold"><i class="fa-solid fa-bug"></i> 偵錯資訊:</p>
-                <p>學號：<span id="debugId"></span></p>
-                <p>區間：<span id="debugRange"></span></p>
+                <p class="font-bold"><i class="fa-solid fa-bug"></i> 偵錯資訊 (請截圖給小天使):</p>
+                <p>系統搜尋學號：<span id="debugId"></span></p>
+                <p>系統搜尋區間：<span id="debugRange"></span></p>
               </div>
           </div>
         </div>
@@ -223,7 +223,7 @@
 
   <script>
     // ============================================
-    // 【重要】請確認這是您最新的 GAS Web App URL
+    // 【重要】請填入您最新部署到 GAS 的 Web App URL
     // ============================================
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwyasaaysx1c5Dpznn_xn5DMFSSolLQd_KDmcrv22PAT7YrW8H8jcpumg3UjNQ72QDu/exec";
 
@@ -235,6 +235,7 @@
         const storedUser = sessionStorage.getItem('artemis_user');
         if (storedUser) {
             const parsed = JSON.parse(storedUser);
+            // 恢復上次登入狀態
             document.getElementById('phoneNumber').value = parsed.user.phone;
             handleLogin(null, parsed); 
         }
@@ -250,6 +251,7 @@
     function handleLogin(e, restoredData = null) {
       if(e) e.preventDefault();
       
+      // 如果有快取資料，直接使用，不用再打 API
       if (restoredData) {
          currentUser = restoredData.user;
          initDashboard(restoredData);
@@ -337,7 +339,7 @@
       if (tabName === 'stats') loadStats();
       if (tabName === 'calendar') {
           loadCalendar();
-          // 【關鍵修復】切換 Tab 時強制重繪日曆，解決 display:none 導致的高度為0問題
+          // 【關鍵修復】切換 Tab 時強制重繪日曆
           if (calendarInstance) {
               setTimeout(() => {
                   calendarInstance.updateSize(); 
@@ -461,11 +463,9 @@
         });
     }
 
-    // --- 【行事曆核心修正】 ---
     function loadCalendar() {
       const calendarEl = document.getElementById('calendar');
 
-      // 如果已經初始化過，就不重複抓資料，但要觸發 resize
       if (calendarInstance) {
         setTimeout(() => calendarInstance.updateSize(), 100);
         return; 
@@ -473,45 +473,41 @@
 
       showContentLoader(true);
       
-      // 使用 fetch 抓資料
       fetch(`${GAS_API_URL}?op=getCalendar&sheetId=${currentUser.sheetId}&id=${currentUser.id}`)
         .then(r => r.json())
         .then(res => {
             showContentLoader(false);
             
-            // 檢查是否成功
             if (!res.success) {
                 console.error("Calendar Load Failed", res);
                 Swal.fire('錯誤', '行事曆載入失敗', 'error');
                 return;
             }
 
-            // 初始化 FullCalendar
             calendarInstance = new FullCalendar.Calendar(calendarEl, {
               initialView: 'dayGridMonth',
               height: 'auto',
               locale: 'zh-tw',
+              dayMaxEvents: true, // 手機版重要：避免格子撐開
               headerToolbar: {
                 left: 'prev,next',
                 center: 'title',
                 right: 'today'
               },
-              // 這裡直接填入後端抓回來的 events 陣列 (後端已包含 title 處理)
+              // 直接使用後端回傳的事件 (已包含 yyyy-MM-dd 與標題)
               events: res.events, 
               
               eventClick: function(info) {
                   Swal.fire({
                     title: info.event.title,
-                    text: info.event.startStr,
+                    text: '日期：' + info.event.startStr,
                     confirmButtonColor: '#db2777'
                   });
               }
             });
             
-            // 渲染
             calendarInstance.render();
             
-            // 強制再次調整大小，避免破圖
             setTimeout(() => {
                 calendarInstance.updateSize();
             }, 100);
