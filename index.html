@@ -55,9 +55,6 @@
     ::-webkit-scrollbar-thumb { background: #db2777; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #be185d; }
 
-    /* =========================================
-       【修正】行事曆手機版顯示優化 CSS
-       ========================================= */
     .fc-event {
         height: auto !important; 
         min-height: 1.2em;
@@ -72,7 +69,7 @@
         white-space: normal !important; 
         word-break: break-word !important; 
         overflow: visible !important;
-        font-size: 0.75rem !important; /* 字體縮小 */
+        font-size: 0.75rem !important;
         line-height: 1.1 !important;
         padding: 1px 0;
     }
@@ -139,8 +136,17 @@
           <i class="fa-solid fa-crown text-9xl text-purple-600"></i>
         </div>
         <h2 class="text-2xl font-bold text-gray-800 mb-2">Hi, <span id="userName" class="text-pink-600"></span> <span id="className" class="text-sm text-gray-500 font-normal ml-2 bg-gray-100 px-2 py-1 rounded-md"></span></h2>
-        <p class="text-gray-600 text-sm mb-4">統計區間：<span id="periodDate"></span></p>
-        <div class="bg-pink-50 rounded-lg p-4 border border-pink-100">
+        
+        <p class="text-gray-600 text-sm mb-1">統計區間：<span id="periodDate" class="font-medium"></span></p>
+        
+        <div id="excludeDateContainer" class="hidden mb-4 inline-block bg-rose-50 border border-rose-100 px-3 py-1.5 rounded-md shadow-sm">
+          <p class="text-rose-600 text-xs font-bold flex items-center">
+            <i class="fa-solid fa-calendar-xmark mr-1.5"></i> 不計次停課區間：
+            <span id="excludeDateText" class="ml-1 font-normal tracking-wide"></span>
+          </p>
+        </div>
+
+        <div class="bg-pink-50 rounded-lg p-4 border border-pink-100 mt-2">
           <p class="text-pink-800 font-medium flex items-start">
             <i class="fa-solid fa-circle-info mt-1 mr-2 text-pink-500"></i>
             <span id="coachTip">載入中...</span>
@@ -319,9 +325,20 @@
       
       document.getElementById('headerUserName').innerText = data.user.name;
       document.getElementById('periodDate').innerText = data.user.period;
+      
+      // 【新增】顯示後端傳來的停課區間
+      const excludeContainer = document.getElementById('excludeDateContainer');
+      const excludeText = document.getElementById('excludeDateText');
+      
+      if (data.user.excludeText) {
+          excludeText.innerText = data.user.excludeText;
+          excludeContainer.classList.remove('hidden');
+      } else {
+          excludeContainer.classList.add('hidden');
+      }
+
       document.getElementById('coachTip').innerText = data.coachTip;
       
-      // 【修正】填入詳細三欄位統計數據
       const stats = data.checkInStats || { total: data.checkInCount || 0, task: 0, sport: 0 };
       document.getElementById('cntTask').innerText = stats.task;
       document.getElementById('cntSport').innerText = stats.sport;
@@ -347,7 +364,6 @@
       if (tabName === 'stats') loadStats();
       if (tabName === 'calendar') {
           loadCalendar();
-          // 【修正】切換 Tab 時強制重繪日曆
           if (calendarInstance) {
               setTimeout(() => {
                   calendarInstance.updateSize(); 
@@ -494,7 +510,7 @@
               initialView: 'dayGridMonth',
               height: 'auto',
               locale: 'zh-tw',
-              dayMaxEvents: true, // 手機版重要：避免格子撐開
+              dayMaxEvents: true, 
               headerToolbar: {
                 left: 'prev,next',
                 center: 'title',
